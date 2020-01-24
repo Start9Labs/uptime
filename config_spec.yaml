@@ -1,0 +1,62 @@
+servers:
+  type: list
+  name: Servers
+  description: Configuration options for the servers you want to watch
+  default: []
+  range: "[0,*)"
+  spec:
+    type: object
+    spec:
+      enabled:
+        type: boolean
+        name: Enabled
+        description: Turn on monitoring for this server
+        default: true
+      name:
+        type: string
+        name: Name
+        description: The friendly name for this server
+        nullable: false
+      torAddress:
+        type: string
+        name: Tor Address
+        description: Tor address of the agent app of the server
+        nullable: false
+        pattern: "^[a-z2-7]{56}\\.onion$"
+        patternDescription: Must be a v3 onion url
+      webhook:
+        type: object
+        name: Webhook
+        description: The HTTP request to make if an issue is found with the server
+        nullable: false
+        spec:
+          url:
+            type: string
+            name: URL
+            description: The URL to POST to
+            nullable: false
+            pattern: "^https?://(www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_\\+.~#?&//=]*)$"
+            patternDescription: A fully qualified HTTP URL
+          messageParam:
+            type: string
+            name: Message Parameter
+            description: Name of the query parameter to use for the error message
+            nullable: true
+            default: message
+          basicAuth:
+            type: object
+            name: Basic Auth
+            description: Username and password to use for authentication
+            nullable: true
+            nullByDefault: true
+            spec:
+              username:
+                type: string
+                name: Username
+                description: Username to use for authentication
+                nullable: false
+              password:
+                type: string
+                name: Password
+                description: Password to use for authentication
+                nullable: true

@@ -1,0 +1,17 @@
+id: uptime
+version: "0.1.0"
+title: Uptime
+description:
+  short: Easy Server Monitoring
+  long: Monitor other servers, and send a message if they have a problem.
+release-notes: |
+  # Alpha Release
+  - Poll servers
+  - Call webhooks
+ports:
+  - 59002
+image:
+  type: tar
+mount: /root
+assets: []
+hidden-service-version: v3
