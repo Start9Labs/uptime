@@ -102,9 +102,14 @@ fn main() -> Result<(), Error> {
     ))?;
     let client_base = reqwest::blocking::Client::builder().proxy(proxy).build()?;
 
+    while config.servers.is_empty() {
+        std::thread::sleep(std::time::Duration::from_secs(0x1000)); // a long-ass time
+    }
+
     for mut server in config.servers.into_iter().filter(|c| c.enabled) {
         server.webhook.url.set_port(Some(5959)).expect("Set Port");
         let client = client_base.clone();
+        hit_callback(&server, &client, format!("{}: TEST", server.name));
         std::thread::spawn(move || loop {
             let req = client.get(server.tor_address.clone());
             match req.send() {
