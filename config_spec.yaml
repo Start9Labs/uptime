@@ -17,6 +17,8 @@ servers:
         name: Name
         description: The friendly name for this server
         nullable: false
+        pattern: ~
+        patternDescription: ""
       torAddress:
         type: string
         name: Tor Address
@@ -43,6 +45,8 @@ servers:
             description: Name of the query parameter to use for the error message
             nullable: true
             default: message
+            pattern: ~
+            patternDescription: ""
           basicAuth:
             type: object
             name: Basic Auth
@@ -55,8 +59,12 @@ servers:
                 name: Username
                 description: Username to use for authentication
                 nullable: false
+                pattern: ~
+                patternDescription: ""
               password:
                 type: string
                 name: Password
                 description: Password to use for authentication
                 nullable: true
+                pattern: ~
+                patternDescription: ""
