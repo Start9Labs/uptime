@@ -22,8 +22,7 @@ struct Webhook {
 struct Server {
     enabled: bool,
     name: String,
-    #[serde(deserialize_with = "deser_url")]
-    tor_address: Url,
+    tor_address: String,
     webhook: Webhook,
     interval: std::time::Duration,
 }
@@ -106,12 +105,11 @@ fn main() -> Result<(), Error> {
         std::thread::sleep(std::time::Duration::from_secs(0x1000)); // a long-ass time
     }
 
-    for mut server in config.servers.into_iter().filter(|c| c.enabled) {
-        server.webhook.url.set_port(Some(5959)).expect("Set Port");
+    for server in config.servers.into_iter().filter(|c| c.enabled) {
         let client = client_base.clone();
         hit_callback(&server, &client, format!("{}: TEST", server.name));
         std::thread::spawn(move || loop {
-            let req = client.get(server.tor_address.clone());
+            let req = client.get(&format!("http://{}:5959", server.tor_address));
             match req.send() {
                 Ok(a) if a.status().is_success() => (),
                 Ok(a) => hit_callback(
