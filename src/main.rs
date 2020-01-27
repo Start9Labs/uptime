@@ -15,6 +15,7 @@ struct Webhook {
     url: Url,
     message_param: Option<String>,
     basic_auth: Option<BasicAuth>,
+    test: bool,
 }
 
 #[derive(Clone, Debug, serde::Deserialize)]
@@ -24,7 +25,7 @@ struct Server {
     name: String,
     tor_address: String,
     webhook: Webhook,
-    interval: std::time::Duration,
+    interval: u64,
 }
 fn deser_url<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Url, D::Error> {
     let s = String::deserialize(deserializer)?;
@@ -107,25 +108,36 @@ fn main() -> Result<(), Error> {
 
     for server in config.servers.into_iter().filter(|c| c.enabled) {
         let client = client_base.clone();
-        hit_callback(&server, &client, format!("{}: TEST", server.name));
+        let mut success = true;
+        if server.webhook.test {
+            hit_callback(&server, &client, format!("{}: TEST", server.name));
+        }
         std::thread::spawn(move || loop {
-            let req = client.get(&format!("http://{}:5959", server.tor_address));
+            let req = client.get(&format!("http://{}:5959/version", server.tor_address));
             match req.send() {
-                Ok(a) if a.status().is_success() => (),
-                Ok(a) => hit_callback(
-                    &server,
-                    &client,
-                    format!(
-                        "{}: {}",
-                        server.name,
-                        a.status()
-                            .canonical_reason()
-                            .unwrap_or("UNKNOWN STATUS CODE")
-                    ),
-                ),
-                Err(e) => hit_callback(&server, &client, format!("{}: {}", server.name, e)),
+                Ok(a) if a.status().is_success() => {
+                    success = true;
+                }
+                a if success => {
+                    success = false;
+                    match a {
+                        Ok(a) => hit_callback(
+                            &server,
+                            &client,
+                            format!(
+                                "{}: {}",
+                                server.name,
+                                a.status()
+                                    .canonical_reason()
+                                    .unwrap_or("UNKNOWN STATUS CODE")
+                            ),
+                        ),
+                        Err(e) => hit_callback(&server, &client, format!("{}: {}", server.name, e)),
+                    };
+                }
+                _ => (),
             }
-            std::thread::sleep(server.interval);
+            std::thread::sleep(std::time::Duration::from_secs(server.interval));
         });
     }
 

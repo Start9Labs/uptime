@@ -68,3 +68,16 @@ servers:
                 nullable: true
                 pattern: ~
                 patternDescription: ""
+          test:
+            type: boolean
+            name: Test
+            description: Test webhook on startup
+            default: true
+      interval:
+        type: number
+        name: Interval
+        description: Time between health check attempts
+        nullable: false
+        range: "[1,*)"
+        integral: true
+        default: 5
