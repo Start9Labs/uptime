@@ -18,7 +18,7 @@ servers:
         description: The friendly name for this server
         nullable: false
         pattern: ~
-        patternDescription: ""
+        patternDescription: ~
       torAddress:
         type: string
         name: Tor Address
@@ -46,7 +46,7 @@ servers:
             nullable: true
             default: message
             pattern: ~
-            patternDescription: ""
+            patternDescription: ~
           basicAuth:
             type: object
             name: Basic Auth
@@ -60,14 +60,14 @@ servers:
                 description: Username to use for authentication
                 nullable: false
                 pattern: ~
-                patternDescription: ""
+                patternDescription: ~
               password:
                 type: string
                 name: Password
                 description: Password to use for authentication
                 nullable: true
                 pattern: ~
-                patternDescription: ""
+                patternDescription: ~
           test:
             type: boolean
             name: Test
@@ -79,5 +79,6 @@ servers:
         description: Time between health check attempts
         nullable: false
         range: "[1,*)"
-        integral: true
+        integral: false
         default: 5
+        units: seconds

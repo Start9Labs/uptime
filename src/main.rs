@@ -25,7 +25,7 @@ struct Server {
     name: String,
     tor_address: String,
     webhook: Webhook,
-    interval: u64,
+    interval: f64,
 }
 fn deser_url<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Url, D::Error> {
     let s = String::deserialize(deserializer)?;
@@ -100,19 +100,23 @@ fn main() -> Result<(), Error> {
         "socks5h://{}:9050",
         std::env::var("HOST_IP").with_context(|e| format!("HOST_IP: {}", e))?
     ))?;
-    let client_base = reqwest::blocking::Client::builder().proxy(proxy).build()?;
+    let client_base = reqwest::blocking::Client::builder()
+        .timeout(std::time::Duration::from_secs(60))
+        .proxy(proxy)
+        .build()?;
 
     while config.servers.is_empty() {
         std::thread::sleep(std::time::Duration::from_secs(0x1000)); // a long-ass time
     }
 
+    let mut handles = Vec::with_capacity(config.servers.len());
     for server in config.servers.into_iter().filter(|c| c.enabled) {
         let client = client_base.clone();
         let mut success = true;
         if server.webhook.test {
             hit_callback(&server, &client, format!("{}: TEST", server.name));
         }
-        std::thread::spawn(move || loop {
+        handles.push(std::thread::spawn(move || loop {
             let req = client.get(&format!("http://{}:5959/version", server.tor_address));
             match req.send() {
                 Ok(a) if a.status().is_success() => {
@@ -132,13 +136,22 @@ fn main() -> Result<(), Error> {
                                     .unwrap_or("UNKNOWN STATUS CODE")
                             ),
                         ),
-                        Err(e) => hit_callback(&server, &client, format!("{}: {}", server.name, e)),
+                        Err(e) => {
+                            if format!("{}", e).contains("Proxy server unreachable") {
+                                eprintln!("socks5 is down");
+                            } else {
+                                hit_callback(&server, &client, format!("{}: {}", server.name, e));
+                            }
+                        }
                     };
                 }
                 _ => (),
             }
-            std::thread::sleep(std::time::Duration::from_secs(server.interval));
-        });
+            std::thread::sleep(std::time::Duration::from_secs_f64(server.interval));
+        }));
+    }
+    for handle in handles {
+        handle.join().unwrap();
     }
 
     Ok(())
