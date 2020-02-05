@@ -1,5 +1,6 @@
 servers:
-  type: object[]
+  type: list
+  subtype: object
   name: Servers
   description: Configuration options for the servers you want to watch
   default: []
