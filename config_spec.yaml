@@ -1,11 +1,10 @@
 servers:
-  type: list
+  type: object[]
   name: Servers
   description: Configuration options for the servers you want to watch
   default: []
   range: "[0,*)"
   spec:
-    type: object
     spec:
       enabled:
         type: boolean
